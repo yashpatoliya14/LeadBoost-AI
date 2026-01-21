@@ -84,9 +84,15 @@ async function processAnalysis(analysisId, url) {
       { $set: { extractedContent } }
     );
 
-    // Step 3: AI Analysis
-    console.log(`[${analysisId}] Analyzing with AI...`);
-    const analysis = await analyzeContent(extractedContent);
+    // Step 3: Parallel ML and AI Analysis
+    console.log(`[${analysisId}] Running ML models and AI analysis in parallel...`);
+    const [mlScores, aiAnalysis] = await Promise.all([
+      analyzeMl(extractedContent),
+      analyzeContent(extractedContent)
+    ]);
+
+    // Generate ML predictions
+    const mlPredictions = generateMlPredictions(mlScores);
 
     // Step 4: Update with complete analysis
     await collection.updateOne(
@@ -94,15 +100,18 @@ async function processAnalysis(analysisId, url) {
       {
         $set: {
           status: 'completed',
-          scores: analysis.scores,
-          explanations: analysis.explanations,
-          rewrites: analysis.rewrites,
+          scores: aiAnalysis.scores,
+          explanations: aiAnalysis.explanations,
+          rewrites: aiAnalysis.rewrites,
+          mlScores: mlScores,
+          mlPredictions: mlPredictions,
           completedAt: new Date(),
         },
       }
     );
 
     console.log(`[${analysisId}] Analysis completed successfully`);
+    console.log(`[${analysisId}] ML Score: ${mlScores.overall.mlScore}, AI Score: ${aiAnalysis.scores.overall}`);
   } catch (error) {
     console.error(`[${analysisId}] Analysis failed:`, error);
 

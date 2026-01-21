@@ -3,6 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { getCollection } from '@/lib/db';
 import { scrapeWebsite, extractContent } from '@/lib/scraper';
 import { analyzeContent } from '@/lib/ai-analyzer';
+import { analyzeMl, generateMlPredictions } from '@/lib/dl-analyzer';
 
 export async function POST(request) {
   try {

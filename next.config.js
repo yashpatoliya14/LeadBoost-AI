@@ -4,10 +4,25 @@ const nextConfig = {
     unoptimized: true,
   },
   experimental: {
-    // Remove if not using Server Components
-    serverComponentsExternalPackages: ['mongodb'],
+    // Externalize packages with native bindings for Server Components
+    serverComponentsExternalPackages: [
+      'mongodb',
+      '@xenova/transformers',
+      'onnxruntime-node',
+      'natural',
+    ],
   },
-  webpack(config, { dev }) {
+  webpack(config, { isServer, dev }) {
+    // Externalize native modules that cannot be bundled
+    if (isServer) {
+      config.externals = config.externals || [];
+      config.externals.push({
+        'onnxruntime-node': 'commonjs onnxruntime-node',
+        '@xenova/transformers': 'commonjs @xenova/transformers',
+        'natural': 'commonjs natural',
+      });
+    }
+
     if (dev) {
       // Reduce CPU/memory from file watching
       config.watchOptions = {
